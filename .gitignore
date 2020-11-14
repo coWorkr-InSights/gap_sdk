@@ -13,3 +13,5 @@ BUILD
 junit-reports/
 /rtos/pulp/archi/
 /rtos/pulp/hal/
+/tools/autotiler_v2
+/tools/autotiler_v3
