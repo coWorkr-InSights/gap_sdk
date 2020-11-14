@@ -326,10 +326,10 @@ static void __pi_nina_b112_device_id_get(struct pi_device *device, struct pi_nin
 static int __pi_nina_b112_open(struct pi_device *device)
 {
     /* Config device GPIO & pads. */
-    pi_gpio_pin_configure(NULL, GPIO_NINA_PWRON, PI_GPIO_OUTPUT);
-    pi_gpio_pin_configure(NULL, GPIO_NINA17_DSR, PI_GPIO_OUTPUT);
-    pi_gpio_pin_write(NULL, GPIO_NINA_PWRON, 0);
-    pi_gpio_pin_write(NULL, GPIO_NINA17_DSR, 1);
+    //pi_gpio_pin_configure(NULL, GPIO_NINA_PWRON, PI_GPIO_OUTPUT);
+    //pi_gpio_pin_configure(NULL, GPIO_NINA17_DSR, PI_GPIO_OUTPUT);
+    //pi_gpio_pin_write(NULL, GPIO_NINA_PWRON, 0);
+    //pi_gpio_pin_write(NULL, GPIO_NINA17_DSR, 1);
 
     struct pi_nina_b112_conf *conf = (struct pi_nina_b112_conf *) device->config;
     /* Nina_b112 device. */
@@ -373,17 +373,17 @@ static int __pi_nina_b112_open(struct pi_device *device)
         return -4;
     }
     /* Enable Nina_B112. */
-    pi_gpio_pin_write(NULL, GPIO_NINA17_DSR, 0);
-    pi_gpio_pin_write(NULL, GPIO_NINA_PWRON, 1);
+    //pi_gpio_pin_write(NULL, GPIO_NINA17_DSR, 0);
+    //pi_gpio_pin_write(NULL, GPIO_NINA_PWRON, 1);
     /* Wait some time for stability. */
-    pi_time_wait_us(1 * 1000 * 1000);
+    //pi_time_wait_us(1 * 1000 * 1000);
 
     /* Test if NINA_B112 is active. */
-    cmd_res_e nina_active = __pi_nina_b112_at_cmd(device, "", NULL, 0);
-    if (nina_active == CMD_RES_ERR)
-    {
-        return -5;
-    }
+    // cmd_res_e nina_active = __pi_nina_b112_at_cmd(device, "", NULL, 0);
+    // if (nina_active == CMD_RES_ERR)
+    // {
+    //     return -5;
+    // }
     return 0;
 }
 

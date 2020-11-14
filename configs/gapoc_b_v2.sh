@@ -18,6 +18,7 @@ export PULP_CURRENT_CONFIG=$BOARD_NAME@config_file=boards/gapoc_b_revb.json
 export GVSOC_CONFIG=boards/gapoc_b_revb
 export OPENOCD_CHIP_TARGET=target/gap8revb.tcl
 export OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-ocd-h.cfg
+export GAPY_OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-ocd-h.cfg
 export PLPBRIDGE_CABLE=ftdi
 
 export GAPY_TARGET=gapoc_b_v2

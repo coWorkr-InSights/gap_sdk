@@ -5,7 +5,8 @@ set BOOT_MODE_JTAG_HYPER 10
 set HI_SPEED_MODE 1
 
 set _WORKAREASIZE 0xFFFFFFFF
-adapter_khz 1500
+# Speed was 1500
+adapter speed 8000
 
 interface ftdi
 transport select jtag
