@@ -1,0 +1,15 @@
+#!/bin/bash
+
+export OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-ocd-h.cfg
+export OPENOCD_CHIP_TARGET=target/gap8revb.tcl
+
+echo "BE CAREFUL: This will permanently configure the board to boot from hyperflash and cannot be undo. Do you confirm (y/N) ?"
+read answer
+
+if [ "$answer" == "y" ]; then
+    echo Configuring board for revb fll assert cycles, please stop it when \"fuse_once is done\" is displayed.
+    echo
+    gap8-openocd -f $OPENOCD_CABLE -f $OPENOCD_CHIP_TARGET -f tcl/jtag_boot.tcl -f tcl/fuser.tcl -c 'fuse_reliable_hyper_boot_revc '${GAP_OPENOCD_TOOLS}''
+else
+    echo Aborting
+fi
