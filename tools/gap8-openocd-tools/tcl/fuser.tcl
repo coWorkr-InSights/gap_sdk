@@ -312,8 +312,8 @@ proc fuse_xtal_config_cycles {fuse_struct_ptr} {
     
     puts "going to fuse assert cycles"
 	array set fuse_array {
-		0 0x00104000              
-		1 0x0000ffff
+		0 0x40000000
+		1 0xffff0010
 		2 0
 		3 0
 		4 0
@@ -346,7 +346,7 @@ proc fuse_xtal_config_cycles {fuse_struct_ptr} {
 		31 0x0
 	}
     # fuse from bit 208 (#26 XTAL DELTA) value
-	gap_fuse_once 0x1c000190 0x1 208 48 0xf 32
+	gap_fuse_once 0x1c000190 0x1 192 48 0xf 32
 }
 
 
@@ -394,7 +394,7 @@ proc fuse_all_for_hyper_reliable_revc {fuse_struct_ptr} {
 		31 0x0
 	}
     # fuse from bit 208 (#26 XTAL DELTA) value
-	gap_fuse_once 0x1c000190 0x1 0 80 0xf 32
+	gap_fuse_once 0x1c000190 0x1 0 1024 0xf 32
 }
 
 proc fuse_fll_assert_cycles_revb {gap_tools_path} {
@@ -479,6 +479,7 @@ proc fuse_reliable_hyper_boot_revc {gap_tools_path} {
  	puts "fuse done"
     puts "fuse array after:"
     dump_fuse_array ${gap_tools_path}
+    exit
 }
 
 proc fuse_spiflash_boot {gap_tools_path} {

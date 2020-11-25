@@ -15,3 +15,8 @@ junit-reports/
 /rtos/pulp/hal/
 /tools/autotiler_v2
 /tools/autotiler_v3
+.DS_Store
+._.DS_Store
+tools/.DS_Store
+tools/._.DS_Store
+tools/gap8-openocd-tools/tcl/._fuser.tcl
