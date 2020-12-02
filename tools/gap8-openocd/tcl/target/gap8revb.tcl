@@ -6,9 +6,12 @@ set HI_SPEED_MODE 1
 
 set _WORKAREASIZE 0xFFFFFFFF
 # Speed was 1500
+# Eric set to 8000
+#adapter speed 1500
 adapter speed 8000
 
-interface ftdi
+adapter driver ftdi
+#interface ftdi
 transport select jtag
 
 set _CHIPNAME gap8

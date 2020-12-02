@@ -3,7 +3,8 @@
 export OPENOCD_CABLE=interface/ftdi/olimex-arm-usb-ocd-h.cfg
 export OPENOCD_CHIP_TARGET=target/gap8revb.tcl
 
-echo "BE CAREFUL: This will permanently configure the board to boot from hyperflash and cannot be undo. Do you confirm (y/N) ?"
+echo "BE CAREFUL: This will permanently configure the board to boot from hyperflash and cannot be undone. Do you confirm (y/N) ?"
+
 read answer
 
 if [ "$answer" == "y" ]; then
