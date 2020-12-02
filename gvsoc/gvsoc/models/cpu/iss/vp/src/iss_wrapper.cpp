@@ -33,6 +33,8 @@
 # define O_BINARY 0
 #endif
 
+#if 0
+// Old pulp debug unit, no more supported
 #define HALT_CAUSE_EBREAK    0
 #define HALT_CAUSE_ECALL     1
 #define HALT_CAUSE_ILLEGAL   2
@@ -40,6 +42,16 @@
 #define HALT_CAUSE_INTERRUPT 4 
 #define HALT_CAUSE_HALT      15
 #define HALT_CAUSE_STEP      15
+
+#else
+
+#define HALT_CAUSE_EBREAK      1
+#define HALT_CAUSE_TRIGGER     2
+#define HALT_CAUSE_HALT        3
+#define HALT_CAUSE_STEP        4
+#define HALT_CAUSE_RESET_HALT  5
+
+#endif
 
 #ifdef USE_TRDB
 
@@ -149,12 +161,14 @@ void iss_wrapper::exec_instr_check_all(void *__this, vp::clock_event *event)
     _this->current_event = _this->instr_event;
   }
 
+  int debug_mode = _this->cpu.state.debug_mode;
+
   EXEC_INSTR_COMMON(_this, event, iss_exec_step_nofetch_perf);
-  if (_this->step_mode.get())
+  if (_this->step_mode.get() && !debug_mode)
   {
     _this->do_step.set(false);
     _this->hit_reg |= 1;
-    _this->set_halt_mode(true, HALT_CAUSE_HALT);
+    _this->set_halt_mode(true, HALT_CAUSE_STEP);
     _this->check_state();
   }
 }
@@ -309,6 +323,14 @@ void iss_wrapper::flush_cache_sync(void *__this, bool active)
   }
 }
 
+void iss_wrapper::flush_cache_ack_sync(void *__this, bool active)
+{
+    iss_t *_this = (iss_t *)__this;
+    iss_exec_insn_resume(_this);
+    iss_exec_insn_terminate(_this);
+    _this->check_state();
+}
+
 
 void iss_wrapper::set_halt_mode(bool halted, int cause)
 {
@@ -316,6 +338,7 @@ void iss_wrapper::set_halt_mode(bool halted, int cause)
   {
     if (!this->cpu.state.debug_mode)
     {
+      this->cpu.csr.dcsr = (this->cpu.csr.dcsr & ~(0x7 << 6)) | (cause << 6);
       this->debug_req();
     }
   }
@@ -357,6 +380,7 @@ void iss_wrapper::halt_core()
 void iss_wrapper::halt_sync(void *__this, bool halted)
 {
   iss_t *_this = (iss_t *)__this;
+
   _this->trace.msg("Received halt signal sync (halted: 0x%d)\n", halted);
   _this->set_halt_mode(halted, HALT_CAUSE_HALT);
 
@@ -381,8 +405,10 @@ void iss_wrapper::check_state()
       if (this->ipc_stat_event.get_event_active())
         this->trigger_ipc_stat();
 
-      if (step_mode.get())
+      if (step_mode.get() && !this->cpu.state.debug_mode)
+      {
         do_step.set(true);
+      }
       enqueue_next_instr(1 + this->wakeup_latency);
 
       if (this->cpu.csr.pcmr & CSR_PCMR_ACTIVE && this->cpu.csr.pcer & (1<<CSR_PCER_CYCLES))
@@ -482,14 +508,27 @@ void iss_wrapper::wait_for_interrupt()
 }
 
 
+void iss_wrapper::irq_req_sync_handler(void *__this, vp::clock_event *event)
+{
+  iss_t *_this = (iss_t *)__this;
+  _this->irq_req = _this->irq_req_value;
+  _this->irq_check();
+  iss_irq_req(_this, _this->irq_req);
+  _this->wfi.set(false);
+  _this->check_state();
+}
+
+
 void iss_wrapper::irq_req_sync(void *__this, int irq)
 {
   iss_t *_this = (iss_t *)__this;
-  _this->irq_req = irq;
-  _this->irq_check();
-  iss_irq_req(_this, irq);
-  _this->wfi.set(false);
-  _this->check_state();
+  _this->irq_req_value = irq;
+  // Handle the sync in an event with 0 delay to always take into account interrupts after the
+  // instruction has been executed
+  if (!_this->irq_sync_event->is_enqueued())
+  {
+    _this->event_enqueue(_this->irq_sync_event, 0);
+  }
 }
 
 void iss_wrapper::debug_req()
@@ -1081,6 +1120,10 @@ int iss_wrapper::build()
   flush_cache_itf.set_sync_meth(&iss_wrapper::flush_cache_sync);
   new_slave_port("flush_cache", &flush_cache_itf);
 
+  flush_cache_ack_itf.set_sync_meth(&iss_wrapper::flush_cache_ack_sync);
+  new_slave_port("flush_cache_ack", &flush_cache_ack_itf);
+  new_master_port("flush_cache_req", &flush_cache_req_itf);
+
   halt_itf.set_sync_meth(&iss_wrapper::halt_sync);
   new_slave_port("halt", &halt_itf);
 
@@ -1095,10 +1138,13 @@ int iss_wrapper::build()
   instr_event = event_new(iss_wrapper::exec_instr);
   check_all_event = event_new(iss_wrapper::exec_instr_check_all);
   misaligned_event = event_new(iss_wrapper::exec_misaligned);
+  irq_sync_event = event_new(iss_wrapper::irq_req_sync_handler);
 
   this->riscv_dbg_unit = this->get_js_config()->get_child_bool("riscv_dbg_unit");
   this->bootaddr_offset = get_config_int("bootaddr_offset");
   this->cpu.config.mhartid = (get_config_int("cluster_id") << 5) | get_config_int("core_id");
+  this->cpu.config.misa = this->get_js_config()->get_int("misa");
+
   string isa = get_config_str("isa");
   //transform(isa.begin(), isa.end(), isa.begin(),(int (*)(int))tolower);
   this->cpu.config.isa = strdup(isa.c_str());
@@ -1168,6 +1214,7 @@ void iss_wrapper::reset(bool active)
 
     this->ipc_stat_nb_insn = 0;
     this->ipc_stat_delay = 10;
+    this->clock_active = false;
 
     iss_reset(this, 1);
   }

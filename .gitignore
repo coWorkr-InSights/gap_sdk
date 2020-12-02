@@ -13,6 +13,7 @@ BUILD
 junit-reports/
 /rtos/pulp/archi/
 /rtos/pulp/hal/
+<<<<<<< HEAD
 /tools/autotiler_v2
 /tools/autotiler_v3
 .DS_Store
@@ -20,3 +21,5 @@ junit-reports/
 tools/.DS_Store
 tools/._.DS_Store
 tools/gap8-openocd-tools/tcl/._fuser.tcl
+*.a
+.tiler_url
