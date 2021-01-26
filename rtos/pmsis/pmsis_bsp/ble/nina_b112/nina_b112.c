@@ -364,6 +364,7 @@ static int __pi_nina_b112_open(struct pi_device *device)
     uart_conf.baudrate_bps = PI_NINA_B112_UART_BAUDRATE;
     uart_conf.enable_rx = 1;
     uart_conf.enable_tx = 1;
+    uart_conf.parity_mode = 0;
     pi_open_from_conf(&(nina->uart_device), &uart_conf);
     if (pi_uart_open(&(nina->uart_device)))
     {
